@@ -1,0 +1,77 @@
+import requests
+from bs4 import BeautifulSoup
+
+def obtener_productos(palabra, sitio):
+    if sitio == 'mercadolibre':
+        url = 'https://www.mercadolibre.com.co/' + palabra + '_MLC'
+    elif sitio == 'amazon':
+        url = 'https://www.amazon.com/s?k=' + palabra
+    else:
+        print('Por favor escribe mercadolibre o amazon')
+        return
+
+    # Poner un user-agent para que no nos bloqueen
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+    }
+
+    # Hacemos la petición a la página
+    pagina = requests.get(url, headers=headers)
+    if pagina.status_code != 200:
+        print('No se pudo obtener la página')
+        return
+
+    # Parsear el HTML
+    sopa = BeautifulSoup(pagina.content, 'html.parser')
+
+    if sitio == 'mercadolibre':
+        # Buscar los productos, solo los primeros 5
+        productos = sopa.find_all('li', class_='ui-search-layout__item')
+        productos = productos[:5]
+        for p in productos:
+            # Sacar el título
+            titulo = p.find('h2', class_='ui-search-item__title')
+            if titulo:
+                titulo = titulo.text.strip()
+            else:
+                titulo = 'Sin título'
+            # Sacar el precio
+            precio = p.find('span', class_='price-tag-fraction')
+            if precio:
+                precio = precio.text.strip()
+            else:
+                precio = 'Sin precio'
+
+            print('Producto:', titulo)
+            print('Precio: $' + precio)
+            print('---')
+
+    elif sitio == 'amazon':
+        # Buscar los productos (limitar a 5 después)
+        productos = sopa.find_all('div', {'data-component-type': 's-search-result'})
+        productos = productos[:5]
+        for p in productos:
+            titulo = p.find('span', class_='a-size-medium')
+            if titulo:
+                titulo = titulo.text.strip()
+            else:
+                titulo = 'Sin título'
+
+            precio_entero = p.find('span', class_='a-price-whole')
+            precio_decimal = p.find('span', class_='a-price-fraction')
+            if precio_entero and precio_decimal:
+                precio = precio_entero.text.strip() + precio_decimal.text.strip()
+            elif precio_entero:
+                precio = precio_entero.text.strip()
+            else:
+                precio = 'Sin precio'
+
+            print('Producto:', titulo)
+            print('Precio: $' + precio)
+            print('---')
+
+# Pedir al usuario la palabra clave y el sitio
+palabra = input('Escribe la palabra para buscar: ')
+sitio = input('¿En qué sitio quieres buscar? (mercadolibre/amazon): ').lower()
+
+obtener_productos(palabra, sitio)

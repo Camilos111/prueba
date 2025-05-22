@@ -1,0 +1,77 @@
+import tkinter as tk
+from tkinter import messagebox
+import sqlite3
+import requests
+
+# Conectar o crear la base de datos
+conexion = sqlite3.connect('usuarios.db')
+cursor = conexion.cursor()
+
+# Crear tabla si no está creada
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS usuarios (
+    username TEXT PRIMARY KEY,
+    password TEXT NOT NULL
+)
+''')
+
+# Insertar un usuario ejemplo si no existe
+cursor.execute("SELECT * FROM usuarios WHERE username = 'admin'")
+existe = cursor.fetchone()
+if not existe:
+    cursor.execute("INSERT INTO usuarios (username, password) VALUES ('admin', '1234')")
+    conexion.commit()
+
+def validar_usuario(usuario, contraseña):
+    cursor.execute("SELECT * FROM usuarios WHERE username=? AND password=?", (usuario, contraseña))
+    resultado = cursor.fetchone()
+    if resultado:
+        return True
+    else:
+        return False
+
+def mostrar_personajes():
+    url = 'https://rickandmortyapi.com/api/character'
+    respuesta = requests.get(url)
+    if respuesta.status_code == 200:
+        datos = respuesta.json()
+        personajes = datos['results']
+        
+        ventana2 = tk.Toplevel()
+        ventana2.title("Personajes Rick and Morty")
+
+        for p in personajes:
+            nombre = p['name']
+            especie = p['species']
+            etiqueta = tk.Label(ventana2, text=nombre + " - " + especie)
+            etiqueta.pack()
+    else:
+        messagebox.showerror("Error", "No se pudo conectar con la API")
+
+def boton_login():
+    usuario = entrada_usuario.get()
+    contraseña = entrada_contraseña.get()
+
+    if validar_usuario(usuario, contraseña):
+        messagebox.showinfo("Bien!", "Login correcto")
+        mostrar_personajes()
+    else:
+        messagebox.showerror("Error", "Usuario o contraseña incorrectos")
+
+ventana = tk.Tk()
+ventana.title("Login")
+
+tk.Label(ventana, text="Usuario:").pack()
+entrada_usuario = tk.Entry(ventana)
+entrada_usuario.pack()
+
+tk.Label(ventana, text="Contraseña:").pack()
+entrada_contraseña = tk.Entry(ventana, show="*")
+entrada_contraseña.pack()
+
+boton = tk.Button(ventana, text="Login", command=boton_login)
+boton.pack()
+
+ventana.mainloop()
+
+conexion.close()

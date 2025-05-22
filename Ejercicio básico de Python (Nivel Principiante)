@@ -1,0 +1,28 @@
+def numero_mas_frecuente(lista):
+    if lista == []:
+        print("La lista está vacía")
+        return None
+
+    # Crear un diccionario para contar las veces que aparece cada número
+    frecuencias = {}
+
+    for numero in lista:
+        if numero in frecuencias:
+            frecuencias[numero] = frecuencias[numero] + 1
+        else:
+            frecuencias[numero] = 1
+
+    # Buscar la mayor frecuencia
+    mayor = 0
+    for valor in frecuencias.values():
+        if valor > mayor:
+            mayor = valor
+
+    # Buscar todos los números que tienen la mayor frecuencia
+    repetidos = []
+    for clave in frecuencias:
+        if frecuencias[clave] == mayor:
+            repetidos.append(clave)
+
+    # Devolver el menor de los más frecuentes
+    return min(repetidos)

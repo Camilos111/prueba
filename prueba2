@@ -1,1 +1,46 @@
+# Nombres de las cuentas
+cuentas = ['elcorteingles', 'mercadona', 'carrefoures']
 
+
+def generar_seguidor(cuenta):
+    nombre = name()
+    username = user_name()
+    telefono = phone_number()
+    correo = email()
+    fecha = date_between(start_date='-5y', end_date='today')
+    return {
+        "Cuenta": cuenta,
+        "Nombre completo": nombre,
+        "Nombre de usuario": username,
+        "Teléfono": telefono,
+        "Correo electrónico": correo,
+        "Fecha de primera publicación": fecha
+    }
+
+
+seguidores = []
+for cuenta in cuentas:
+    for _ in range(seguidores_por_cuenta):
+        seguidores.append(generar_seguidor(cuenta))
+
+
+df = pd.DataFrame(seguidores)
+
+df['Biografía'] = df['Teléfono'].astype(str) + " | " + df['Correo electrónico'].astype(str)
+
+# Función para extraer desde biografía
+def extraer_contactos(texto):
+    telefonos = re.findall(r'\+?\d[\d\s\-]{7,}', texto)
+    correos = re.findall(r'[\w\.-]+@[\w\.-]+\.\w+', texto)
+    return telefonos, correos
+
+df['Teléfonos extraídos'] = df['Biografía'].apply(lambda x: extraer_contactos(x)[0])
+df['Correos extraídos'] = df['Biografía'].apply(lambda x: extraer_contactos(x)[1])
+
+# Mostrar muestra de resultados
+print(" Muestra de seguidores analizados (10 primeros):\n")
+print(df[['Cuenta', 'Nombre completo', 'Nombre de usuario', 'Teléfonos extraídos', 'Correos extraídos', 'Fecha de primera publicación']].head(10))
+
+# Guardar resultado
+df.to_excel("seguidores_ficticios_3_cuentas.xlsx", index=False)
+print("\n Archivo 'datos_obtenidos.xlsx' generado con éxito.")
